@@ -1,0 +1,30 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="PhishingOutlookAddIn.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="phishingEmailAddress" Type="System.String" Scope="User">
+      <Value Profile="(Default)">phishing@yourbusiness.com</Value>
+    </Setting>
+    <Setting Name="phishingEmailSubject" Type="System.String" Scope="User">
+      <Value Profile="(Default)">POTENTIAL PHISHING</Value>
+    </Setting>
+    <Setting Name="phishingEmailFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Deleted Items</Value>
+    </Setting>
+    <Setting Name="phishingEmailMaxReported" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">10</Value>
+    </Setting>
+    <Setting Name="addinDebug" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="phishingEmailDeleteComplete" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="organizationName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">IT</Value>
+    </Setting>
+    <Setting Name="phishingEmailConfirmationPrompt" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
