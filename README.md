@@ -31,6 +31,11 @@ The Resiliency Registry Key Value can be set in the following manner:
 
 We recommend option #2 above since it mitigates the need for User interjection when getting the AddIn deployed.
 
+##Installer##
+A default Installer setup (PhishingOutlookAddInSetup) project is provided with the Phishing Outlook Addin Solution.  This project leverages the use of the InstallShield Limited Edition (ISLE) install software that comes with Visual Studio Professional 2016, and provides the basics required for installation.  Also source managed (under scripts) is a script which is included with the basic installer, and used udrin gthe uninstallation process to delete the PhishingOutlookAddIn folder created in the **c:\Users\<User>\AppData\Roaming** folder.  
+
+The basic installer can be used, but it will include Registry Key values that are generic and not specific for a target business installation.  One can use the basic installer project as a basis for creating a custom installer project.  Otherwise, one can create their own custom and specific installer if need be (e.g., Using InstallShield, Nullsoft Scritable Install System (NSIS), etc.). 
+
 ##License##
 GNU GENERAL PUBLIC LICENSE
 Version 3, 29 June 2007
