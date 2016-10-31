@@ -19,9 +19,9 @@ The Phishing Outlook AddIn requires the Microsoft VSTO 2010 Runtime for Office l
 ### AddIn Resiliency ###
 A major complaint surrounding Outlook and AddIns is that Outlook disables an AddIn if it thinks the COM AddIn causes Outlook to load too slowly.  A way to get around this is to set a registry value to force Outlook to always load a specific AddIn at startup. Outlook will disable an AddIn that it believes it causes Outlook to crash, but won’t disable an AddIn because it loads too slow.  The Resiliency Registry key value that needs to be added is in the following path in the User's Registry Hive (HKEY_CURRENT_USER).  Here is the registry key value and it's value for Outlook 2016:
 
-**Key Value**:      HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Outlook\Resiliency\DoNotDisableAddinList\PhishingAddIn |
-**Key Value Type**: REG_DWORD                                                                                               |
-**Key Value**:      0x00000001                                                                                              |
+**Key Value**:      HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Outlook\Resiliency\DoNotDisableAddinList\PhishingAddIn
+**Key Value Type**: REG_DWORD 
+**Key Value**:      0x00000001
 
 The Resiliency Registry Key Value can be set in the following manner:
 
