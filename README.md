@@ -16,6 +16,22 @@ The Phishing Outlook AddIn requires the Microsoft .NET Framework 4.52 Full libra
 #####Microsoft VSTO 2010 Runtime#####
 The Phishing Outlook AddIn requires the Microsoft VSTO 2010 Runtime for Office library installed.  This is required to run Microsoft Office based solutions build using Microsoft Visual Studio 2010, 2012, 2013, and 2015.  To run VSTO Add-ins where were created by using the Office developer tools in Visual Studio, target computers must have the Visual Studio Tools for Office runtime installed.  The runtime library includes unmanaged components and a set of managed assemblies. The unmanaged components load the VSTO Add-in assembly.  The managed assemblies provide the object model that your VSTO Add-in code uses to automate and extend the host application.
 
+### AddIn Resiliency ###
+A major complaint surrounding Outlook and AddIns is that Outlook disables an AddIn if it thinks the COM AddIn causes Outlook to load too slowly.  A way to get around this is to set a registry value to force Outlook to always load a specific AddIn at startup. Outlook will disable an AddIn that it believes it causes Outlook to crash, but won’t disable an AddIn because it loads too slow.  The Resiliency Registry key value that needs to be added is in the following path in the User's Registry Hive (HKEY_CURRENT_USER).  Here is the registry key value and it's value for Outlook 2016:
+
+|:-------------------:|:--------------------------------------------------------------------------------------------------------|
+| **Key Value**       | HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Outlook\Resiliency\DoNotDisableAddinList\PhishingAddIn |
+| **Key Value Type**  | REG_DWORD                                                                                               |
+| **Key Value**       | 0x00000001                                                                                              |
+
+The Resiliency Registry Key Value can be set in the following manner:
+
+1. After AddIn installation, if Outlook comes up with the Phishing Outlook AddIn disabled, one can navigate to Outlook's File/Manage COM Add-ins.  Locate the "Phishing Outlook Add-In", and click the "Always enable this add-in" button.  This will generate the Resiliency Registry Key Value in the User's Registry Hive (HKEY_CURRENT_USER).
+
+2. Prior to installing the AddIn, the Office Administrator can deploy a GPO to have the Resiliency Registry Key Value created on the User's Registry Hive (HKEY_CURRENT_USER) upon log on to his/her machine.  After that is pushed, the AddIn can be installed on the User's machine.  
+
+We recommend option #2 above since it mitigates the need for User interjection when getting the AddIn deployed.
+
 ##License##
 GNU GENERAL PUBLIC LICENSE
 Version 3, 29 June 2007
