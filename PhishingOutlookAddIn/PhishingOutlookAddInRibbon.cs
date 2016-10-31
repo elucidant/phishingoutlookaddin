@@ -19,6 +19,7 @@ namespace PhishingOutlookAddIn
       private static bool menuItemsLoaded = false;
 
       public const string APPLICATION_NAME = "PhishingOutlookAddIn";
+      public const string APPLICATION_REGISTRY_NAME = "PhishingAddIn";
 
       public const string DEFAULT_PHISHING_EMAIL_ADDRESS =
          "phishing@yourbusiness.com";
@@ -48,6 +49,10 @@ namespace PhishingOutlookAddIn
 
       // Add-In Registry constants...
       public const string ADD_IN_REGISTRY_ROOT = "HKEY_LOCAL_MACHINE";
+      public const string ADD_IN_REGISTRY_OFFICE_15_RESILIENCY_PATH =
+         "Software\\Microsoft\\Office\\15.0\\Outlook\\Resiliency\\DoNotDisableAddinList";
+      public const string ADD_IN_REGISTRY_OFFICE_16_RESILIENCY_PATH =
+         "Software\\Microsoft\\Office\\16.0\\Outlook\\Resiliency\\DoNotDisableAddinList";
       public const string ADD_IN_REGISTRY_ADDIN_PATH =
          "Software\\Microsoft\\Office\\Outlook\\Addins\\PhishingAddIn";
       public const string ADD_IN_REGISTRY_ADDIN_DEFAULTS_PATH =
@@ -136,12 +141,62 @@ namespace PhishingOutlookAddIn
 
       /**
        * 
+       * This method will attempt to create the Registry Keys that are required
+       * by the application.  Currently, this is not used by the application
+       * but leaving it here for historical reasons.
+       * 
+       * Note:  One of the Registry Keys for the AddIn is the Resiliency Key.
+       * This registry value would force Outlook to always load the Phishing
+       * AddIn. Outlook will disable an add-in that it believes causes Outlook
+       * to crash, but if the Resiliency Key Value is defined, Outlook won’t
+       * disable an add-in because it loaded too slow.
+       * 
+       * For the setting of the Resiliency Key for PhishningAddIn, there
+       * are two solutions to address when Outlook DISABLES the AddIn upon
+       * Outlook startup:
+       * 
+       * 1. End User can go to File/Manage COM Add-ins on Outlook 2016 and click
+       * the "Always enable this add-in" button to set the
+       * "Phishing Outlook Add-In" configured on the HKEY_CURRENT_USER
+       * Resiliency Registry key value:
+       * 
+       * HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Outlook\Resiliency\
+       * DoNotDisableAddinList\PhishingAddIn = 0x00000001 (REG_DWORD)
+       * 
+       * 2. Another option is to define a GPO that sets the Resiliency Registry
+       * Key value.
+       * 
+       */
+
+      public static void createRegistryKeys()
+      {
+         log.Debug("Attempting to create Resiliency Registry Key Values...");
+
+         // Attempt to set AddIn Resiliency Registry Key values if NOT set.
+
+         // Need to set for both Office v15.0 and v16.0
+         // ADD_IN_REGISTRY_OFFICE_15_RESILIENCY_PATH
+
+         createHCURegistryKeyDWordValue(
+            ADD_IN_REGISTRY_OFFICE_15_RESILIENCY_PATH,
+            APPLICATION_REGISTRY_NAME,
+            1,
+            false);
+
+         // ADD_IN_REGISTRY_OFFICE_16_RESILIENCY_PATH
+         createHCURegistryKeyDWordValue(
+            ADD_IN_REGISTRY_OFFICE_16_RESILIENCY_PATH,
+            APPLICATION_REGISTRY_NAME,
+            1,
+            false);
+      }
+
+      /**
+       * 
        * This method checks if the AddIn has been initialized based on the
        * presence of an initialized.txt file in the User's application data
        * folder.  Was having issues with being able to set the Initialized
        * registry flag, so going to use a "folder" flag instead.
-       * 
-       * 
        * 
        */
       public static bool isAddInInitialized()
@@ -821,11 +876,65 @@ namespace PhishingOutlookAddIn
 
       /**
        * 
-       * Sets a register key value.
+       * Sets an HCU register key value.
        * 
        */
 
-      public static void setHCURegistryKeyValue(
+      public static void createHCURegistryKeyDWordValue(
+         string keyName,
+         string valueName,
+         object value,
+         bool forceChangeIfExists)
+      {
+         RegistryKey rk = Registry.CurrentUser.OpenSubKey(keyName, true);
+
+         try
+         {
+            if (rk == null)
+            {
+               log.Debug("Creating HCU Registry Key: " + keyName);
+
+               rk = Registry.CurrentUser.CreateSubKey(keyName);
+            }
+            else
+            {
+               log.Debug("FOUND HCU Registry Key: " + keyName);
+            }
+
+            Object valueValue = rk.GetValue(valueName);
+
+            if (valueValue == null)
+            {
+               log.Debug(
+                  "Setting the Registry Key Value [" +
+                  keyName + "\\" + valueName + "]: " + value);
+
+               rk.SetValue(valueName, value, RegistryValueKind.DWord);
+            }
+            else
+            {
+               log.Debug(
+                  "Registry Key Value ALREADY exists!  " +
+                  "Skipping Setting of Registry Key Value [" +
+                  keyName + "\\" + valueName + "]: " + value);
+            }
+
+            rk.Close();
+         }
+         catch (Exception ex)
+         {
+            log.Error("Exception found during Registry Key Value Creation: " +
+               ex.Message);
+         }
+      }
+
+      /**
+       * 
+       * Sets an HLM register key value.
+       * 
+       */
+
+      public static void setHLMRegistryKeyValue(
          string keyName,
          string valueName,
          object value)
@@ -837,7 +946,6 @@ namespace PhishingOutlookAddIn
 
          rk.Close();
       }
-
 
       /**
        * 
