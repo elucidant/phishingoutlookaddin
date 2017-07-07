@@ -60,7 +60,7 @@
          // button1
          // 
          this.button1.ControlSize = Microsoft.Office.Core.RibbonControlSize.RibbonControlSizeLarge;
-         this.button1.Image = global::PhishingOutlookAddIn.Properties.Resources.phish_button;
+         this.button1.Image = global::PhishingOutlookAddIn.Properties.Resources.phishing_outlook_addin_128x128;
          this.button1.Label = "Report A Phish";
          this.button1.Name = "button1";
          this.button1.ScreenTip = "Report an eMail as Phish!";
@@ -70,7 +70,7 @@
          // menu1
          // 
          this.menu1.Dynamic = true;
-         this.menu1.Image = global::PhishingOutlookAddIn.Properties.Resources.phish_button;
+         this.menu1.Image = global::PhishingOutlookAddIn.Properties.Resources.phishing_outlook_addin_128x128;
          this.menu1.Label = "Phishing";
          this.menu1.Name = "menu1";
          this.menu1.ScreenTip = "Customize Phish Reporting Experience";

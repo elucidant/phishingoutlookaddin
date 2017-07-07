@@ -122,7 +122,8 @@ namespace PhishingOutlookAddIn
 
       private PhishingOutlookAddInSettingsForm form = null;
       private PhishingOutlookAddInAboutForm form2 = null;
-      
+      private PhishingOutlookAddInEmailConfirmationForm sendConfirmationForm = null;
+
       /**
        * 
        * Static constructor to be called upon class initialization and before
@@ -136,7 +137,42 @@ namespace PhishingOutlookAddIn
       {
          log4net.Config.XmlConfigurator.Configure();
 
-         getRegistryKeyValues();
+         log.Debug("In PhishingOutlookAddInRiboon Constructor...");
+
+         // Set Defaults to Registry values...the AddIn will always get the
+         // defaults from the registry in the case the user would want to
+         // reset their settings back to the default values.
+         setDefaultsToRegistryKeyValues();
+
+         // Upon initialization of the object, we need to determine if this is
+         // the first run of the application.  We need to check for the
+         // existence of the Initialized file in the User's local roaming
+         // folder for the AddIn.  If it does not exist, we need to load
+         // the properties from the Registry.
+
+         if (isAddInInitialized() == true)
+         {
+            log.Debug(
+               "Initialized flag file DOES EXIST - initialization file creation skipped!");
+         }
+         else
+         {
+            log.Debug(
+               "Initialized flag does not EXIST.  Initializing application " +
+               "settings from the registry.  Creating initialized file...");
+            
+            // We don't need to set the properties at this point since they
+            // are defaulted to the Registry Key values.  Just need to
+            // persist the Properties to the file system and then create the
+            // initialized file...
+            persistPropertySettings();
+
+            // Create the Initialized file as a flag for future runs that we
+            // don't initialize these values again.
+            createInitializedFile();
+         }
+
+         logSettings();
       }
 
       /**
@@ -272,11 +308,162 @@ namespace PhishingOutlookAddIn
 
       /**
        * 
+       * This method persists the current application settings to the Add-In
+       * User property file on the user's file system.  This is how the
+       * settings are used across Outlook application life-cycles for the
+       * specific user.  This will called ONLY when an initialization file
+       * has not been generated for the user on thes system.
+       * 
+       */
+
+      public static void persistPropertySettings()
+      {
+         // Now we need to persist the values to the Properties file...
+         Properties.Settings.Default.phishingEmailFolder =
+            DEFAULT_PHISHING_EMAIL_FOLDER_PROPERTY;
+         Properties.Settings.Default.phishingEmailAddress =
+            DEFAULT_PHISHING_EMAIL_ADDRESS_PROPERTY;
+         Properties.Settings.Default.phishingEmailSubject =
+            DEFAULT_PHISHING_EMAIL_SUBJECT_PROPERTY;
+         Properties.Settings.Default.organizationName =
+            DEFAULT_ORGANIZATION_NAME_PROPERTY;
+         Properties.Settings.Default.phishingEmailMaxReported =
+            DEFAULT_PHISHING_EMAIL_MAX_REPORTED_PROPERTY;
+         Properties.Settings.Default.phishingEmailDeleteComplete =
+            DEFAULT_PHISHING_EMAIL_DELETE_COMPLETE_PROPERTY;
+         Properties.Settings.Default.phishingInformationURL =
+            DEFAULT_PHISHING_INFORMATION_URL_PROPERTY;
+         Properties.Settings.Default.phishingEmailConfirmationPrompt =
+            DEFAULT_PHISHING_EMAIL_CONFIRMATION_PROMPT_PROPERTY;
+         Properties.Settings.Default.aboutInfo =
+            DEFAULT_ABOUT_INFO_PROPERTY;
+
+         Properties.Settings.Default.addinDebug = DEFAULT_ADDIN_DEBUG_PROPERTY;
+         Properties.Settings.Default.showSettings = SHOW_SETTINGS_PROPERTY;
+
+         // Persist changes to user settings between application sessions.
+         Properties.Settings.Default.Save();
+      }
+
+      /**
+       * 
+       * This method retrieves ALL the Add-In's needed properties from the
+       * Add-In's Properties object.
+       * 
+       */
+      public static void setDefaultsToPropertyValues()
+      {
+         log.Debug("Setting AddIn Defaults to User Property values...");
+
+         DEFAULT_PHISHING_EMAIL_FOLDER_PROPERTY =
+            Properties.Settings.Default.phishingEmailFolder;
+         
+         DEFAULT_PHISHING_EMAIL_ADDRESS_PROPERTY =
+            Properties.Settings.Default.phishingEmailAddress;
+
+         DEFAULT_PHISHING_EMAIL_SUBJECT_PROPERTY =
+            Properties.Settings.Default.phishingEmailSubject;
+
+         DEFAULT_ORGANIZATION_NAME_PROPERTY =
+            Properties.Settings.Default.organizationName;
+
+         DEFAULT_PHISHING_EMAIL_MAX_REPORTED_PROPERTY =
+            Properties.Settings.Default.phishingEmailMaxReported;
+
+         DEFAULT_PHISHING_EMAIL_DELETE_COMPLETE_PROPERTY =
+            Properties.Settings.Default.phishingEmailDeleteComplete;
+
+         DEFAULT_PHISHING_INFORMATION_URL_PROPERTY =
+            Properties.Settings.Default.phishingInformationURL;
+
+         DEFAULT_PHISHING_EMAIL_CONFIRMATION_PROMPT_PROPERTY =
+            Properties.Settings.Default.phishingEmailConfirmationPrompt;
+
+         DEFAULT_ABOUT_INFO_PROPERTY = Properties.Settings.Default.aboutInfo;
+
+         DEFAULT_ADDIN_DEBUG_PROPERTY = Properties.Settings.Default.addinDebug;
+         SHOW_SETTINGS_PROPERTY = Properties.Settings.Default.showSettings;
+      }
+
+      public static void logSettings()
+      {
+         log.Debug(
+            "Main AddIn Properties:\n" + buildAddInSettingsString());
+
+         log.Debug(
+            "AddIn User Configuration Properties:\n" +
+            buildUserConfigSettingsString());
+      }
+
+      public static string buildAddInSettingsString()
+      {
+         string addInSettingsString =
+            "Phishing Email Folder: " +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_FOLDER_PROPERTY + "\n" +
+            "Phishing Email Address: " +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_ADDRESS_PROPERTY + "\n" +
+            "Phishing Email Subject: " +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_SUBJECT_PROPERTY + "\n" +
+            "Organization Name: " +
+               PhishingOutlookAddInRibbon.DEFAULT_ORGANIZATION_NAME_PROPERTY + "\n" +
+            "Phishing Email Max Reported: " +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_MAX_REPORTED_PROPERTY + "\n" +
+            "Phishing Email Delete Complete: " +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_DELETE_COMPLETE_PROPERTY + "\n" +
+            "Phishing Information URL: " +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_INFORMATION_URL_PROPERTY + "\n" +
+            "Phishing Email Confirmation Prompt: " +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_CONFIRMATION_PROMPT_PROPERTY + "\n" +
+            "About Info: " +
+               Properties.Settings.Default.aboutInfo + "\n" +
+            "AddIn Debug: " +
+               PhishingOutlookAddInRibbon.DEFAULT_ADDIN_DEBUG_PROPERTY + "\n" +
+            "Show Settings: " +
+               PhishingOutlookAddInRibbon.SHOW_SETTINGS_PROPERTY;
+
+         return addInSettingsString;
+      }
+
+      /**
+       * 
+       * Helper method to build User Properties string, typically used for
+       * DEBUG purposes.
+       * 
+       */
+      public static string buildUserConfigSettingsString()
+      {
+         string userConfigSettingsString =
+            "Phishing Email Folder: " +
+               Properties.Settings.Default.phishingEmailFolder + "\n" +
+            "Phishing Email Address: " +
+               Properties.Settings.Default.phishingEmailAddress + "\n" +
+            "Phishing Email Subject: " +
+               Properties.Settings.Default.phishingEmailSubject + "\n" +
+            "Organization Name: " +
+               Properties.Settings.Default.organizationName + "\n" +
+            "Phishing Email Maximum Reported: " +
+               Properties.Settings.Default.phishingEmailMaxReported + "\n" +
+            "Phishing Email Delete Complete: " +
+               Properties.Settings.Default.phishingEmailDeleteComplete + "\n" +
+            "Phishing Information URL: " +
+               Properties.Settings.Default.phishingInformationURL + "\n" +
+            "Phishing Email Confirmation Prompt: " +
+               Properties.Settings.Default.phishingEmailConfirmationPrompt + "\n" +
+            "About Info: " +
+               Properties.Settings.Default.aboutInfo + "\n" +
+            "Debug Enabled: " + Properties.Settings.Default.addinDebug + "\n" +
+            "Show Settings: " + Properties.Settings.Default.showSettings;
+
+         return userConfigSettingsString;
+      }
+
+      /**
+       * 
        * This method retrieves ALL the Add-In's needed properties from the
        * Windows Registry.
        * 
        */
-      private static void getRegistryKeyValues()
+      private static void setDefaultsToRegistryKeyValues()
       {
          object returnValue = null;
 
@@ -399,6 +586,7 @@ namespace PhishingOutlookAddIn
             // Initialize the forms that will be used with the ribbon...
             form = new PhishingOutlookAddInSettingsForm();
             form2 = new PhishingOutlookAddInAboutForm();
+            sendConfirmationForm = new PhishingOutlookAddInEmailConfirmationForm();
 
             this.group1.Label = String.Format(
                this.group1.Label, DEFAULT_ORGANIZATION_NAME_PROPERTY);
@@ -416,7 +604,7 @@ namespace PhishingOutlookAddIn
          // menu items over and over again!!!!
          if (menuItemsLoaded == false)
          {
-            if (SHOW_SETTINGS_PROPERTY == true)
+            if (Properties.Settings.Default.showSettings == true)
             {
                RibbonButton menuButton1 = Factory.CreateRibbonButton();
 
@@ -452,8 +640,12 @@ namespace PhishingOutlookAddIn
 
       private void phishReportingSettingsForm_Click(object sender, RibbonControlEventArgs e)
       {
+         // Need to force the update here...in the case where the show
+         // confirmation dialog setting is updated outside the settings form.
+         PhishingOutlookAddInSettingsForm.updateUserSettings();
+
          // Display the form to the user...
-         form.Show();
+         form.showForm();
       }
 
       private void phishingOutlookAddInPhishingInformation_Click(object sender, RibbonControlEventArgs e)
@@ -470,7 +662,6 @@ namespace PhishingOutlookAddIn
       private void button1_Click(object sender, RibbonControlEventArgs e)
       {
          // Process to receive active selection and save email files only
-         Microsoft.Office.Interop.Outlook.Inspector currInspector = null;
          Microsoft.Office.Interop.Outlook.Explorer currExplorer = null;
          Microsoft.Office.Interop.Outlook.MailItem currMail = null;
 
@@ -478,114 +669,101 @@ namespace PhishingOutlookAddIn
 
          if (Properties.Settings.Default.phishingEmailConfirmationPrompt == true)
          {
-            var confirmResult = MessageBox.Show(
-               "Are you sure you want to submit this email(s) as Phish?",
-               "Confirm Phish Submission",
-               MessageBoxButtons.YesNo);
+            var confirmResult = sendConfirmationForm.ShowDialog();
 
-            // If the user indicates NO, then we just exit out...
-            if (confirmResult == DialogResult.No)
+            // If the user indicates NO OR clicked the close button on the
+            // modal dialog, then we just exit out...
+            if ((confirmResult == DialogResult.No) ||
+               (confirmResult == DialogResult.Cancel))
             {
+               log.Debug("User Cancelled Confirmation or opted to NOT send the Phishing Email!");
+
                return;
-            }
+            } 
          }
 
          try
          {
             currExplorer = Globals.ThisAddIn.Application.ActiveExplorer();
-            currInspector = Globals.ThisAddIn.Application.ActiveInspector();
 
-            // If the inspector is NULL, assume we need to look at what is selected
-            // in the active Outlook explorer
-            if (currInspector == null)
-            {
-               log.Debug("No inspector found!  Checking explorer...");
-
-               if (currExplorer != null)
-               {                  
-                  if (log.IsDebugEnabled == true)
-                  {
-                     log.Debug("Found explorer...checking selected emails...");
-
-                     Microsoft.Office.Interop.Outlook.MAPIFolder selectedFolder =
-                        currExplorer.CurrentFolder;
-
-                     String expMessage =
-                        "Your current folder is " +
-                        selectedFolder.Name + ".\n";
-
-                     log.Debug(expMessage);
-                  }
-
-                  // Verify that the MAXIMUM or less emails have been
-                  // selected...
-                  if (currExplorer.Selection.Count > form.PhishingEmailMaxReported)
-                  {
-                     MessageBox.Show(
-                        "Please select " +
-                        form.PhishingEmailMaxReported +
-                        " or LESS emails to report!",
-                        "Maximum Reported Phishing Emails Exceeded!",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-
-                     return;
-                  }
-                  else if (currExplorer.Selection.Count == 0)
-                  {
-                     MessageBox.Show(
-                        "Please select an eMail to report as a Phish!");
-
-                     return;
-                  }
-                  else
-                  {
-                     // We know that there is at least as many as the MAXIMUM
-                     // NUMBER of emails selected at this point...
-                     Object selObject = null;
-
-                     for (int i = 0; i < currExplorer.Selection.Count; i++)
-                     {
-                        // Selection array is ONE based for some reason...
-                        selObject = currExplorer.Selection[i + 1];
-
-                        if (selObject is Microsoft.Office.Interop.Outlook.MailItem)
-                        {
-                           currMail = (selObject as Microsoft.Office.Interop.Outlook.MailItem);
-                        }
-                        else
-                        {
-                           // At this point, if the select object is not a MailItem object
-                           // we just want to ignore the rest of the operation and return.
-                           string objectType = selObject.GetType().ToString();
-
-                           string message =
-                              "The object selected is NOT a Mail Item.  " +
-                              "This will NOT be processed as a Phish!";
-
-                           MessageBox.Show(message,
-                              "Warning",
-                              MessageBoxButtons.OK,
-                              MessageBoxIcon.Warning);
-
-                           log.Warn(message);
-
-                           return;
-                        }
-
-                        processMail(currMail);
-                     }
-                  }
-               }
-            }
-            else
-            {
-               // Need to get the current "active" email item in Outlook...
-               if (currInspector.CurrentItem is Microsoft.Office.Interop.Outlook.MailItem)
+            // Always look for the mail in the Explorer.  Previously, if the
+            // Inspector was NOT NULL, we used the inspector to see process
+            // the selecteed item.   However, due to customer feedback, we
+            // should only process what is selected in the Explorer.
+            if (currExplorer != null)
+            {                  
+               if (log.IsDebugEnabled == true)
                {
-                  currMail = (Microsoft.Office.Interop.Outlook.MailItem)currInspector.CurrentItem;
+                  log.Debug("Found explorer...checking selected emails...");
 
-                  processMail(currMail);
+                  Microsoft.Office.Interop.Outlook.MAPIFolder selectedFolder =
+                     currExplorer.CurrentFolder;
+
+                  String expMessage =
+                     "Your current folder is " +
+                     selectedFolder.Name + ".\n";
+
+                  log.Debug(expMessage);
+               }
+
+               // Verify that the MAXIMUM or less emails have been
+               // selected...
+               if (currExplorer.Selection.Count > form.PhishingEmailMaxReported)
+               {
+                  MessageBox.Show(
+                     "Please select " +
+                     form.PhishingEmailMaxReported +
+                     " or LESS emails to report!",
+                     "Maximum Reported Phishing Emails Exceeded!",
+                     MessageBoxButtons.OK,
+                     MessageBoxIcon.Error);
+
+                  return;
+               }
+               else if (currExplorer.Selection.Count == 0)
+               {
+                  MessageBox.Show(
+                     "Please select an eMail to report as a Phish!");
+
+                  return;
+               }
+               else
+               {
+                  // We know that there is at least as many as the MAXIMUM
+                  // NUMBER of emails selected at this point...
+                  Object selObject = null;
+
+                  for (int i = 0; i < currExplorer.Selection.Count; i++)
+                  {
+                     // Selection array is ONE based for some reason...
+                     selObject = currExplorer.Selection[i + 1];
+
+                     if (selObject is Microsoft.Office.Interop.Outlook.MailItem)
+                     {
+                        currMail = (selObject as Microsoft.Office.Interop.Outlook.MailItem);
+                     }
+                     else
+                     {
+                        // At this point, if the select object is not a MailItem object
+                        // we just want to ignore the rest of the operation and return.
+                        string objectType = selObject.GetType().ToString();
+
+                        string message =
+                           "The object selected is NOT a Mail Item.  " +
+                           "This will NOT be processed as a Phish!";
+
+                        MessageBox.Show(message,
+                           "Warning",
+                           MessageBoxButtons.OK,
+                           MessageBoxIcon.Warning);
+
+                        log.Warn(message);
+
+                        return;
+                     }
+
+                     processMail(currMail);
+                  }
                }
             }
          }
@@ -731,7 +909,7 @@ namespace PhishingOutlookAddIn
             Microsoft.Office.Interop.Outlook.MailItem newMail = mail.Forward();
 
             log.Debug(
-                  "Forwarding Email to  EMAIL to: Receipient: " + forwardRecipient +
+                  "Forwarding Email to  EMAIL to: Recipient: " + forwardRecipient +
                   "; Sender: " + mail.SenderName + "; Subject: " +
                   mail.Subject);
 

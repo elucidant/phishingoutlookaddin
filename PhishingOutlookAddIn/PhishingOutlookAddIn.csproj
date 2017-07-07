@@ -188,6 +188,12 @@
     <Compile Include="PhishingOutlookAddInAboutForm.Designer.cs">
       <DependentUpon>PhishingOutlookAddInAboutForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="PhishingOutlookAddInEmailConfirmationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PhishingOutlookAddInEmailConfirmationForm.Designer.cs">
+      <DependentUpon>PhishingOutlookAddInEmailConfirmationForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="PhishingOutlookAddInSettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -199,6 +205,9 @@
     </Compile>
     <EmbeddedResource Include="PhishingOutlookAddInAboutForm.resx">
       <DependentUpon>PhishingOutlookAddInAboutForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhishingOutlookAddInEmailConfirmationForm.resx">
+      <DependentUpon>PhishingOutlookAddInEmailConfirmationForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PhishingOutlookAddInRibbon.resx">
       <DependentUpon>PhishingOutlookAddInRibbon.cs</DependentUpon>
@@ -259,6 +268,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\phish_499x312.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\phishing_outlook_addin.ico" />
+    <Content Include="Resources\phishing_outlook_addin_128x128.png" />
+    <None Include="Resources\phishing_outlook_addin_128x1281.png" />
+    <Content Include="Resources\warning_32x32.png" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

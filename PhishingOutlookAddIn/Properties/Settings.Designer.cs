@@ -118,5 +118,42 @@ namespace PhishingOutlookAddIn.Properties {
                 this["phishingEmailConfirmationPrompt"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool showSettings {
+            get {
+                return ((bool)(this["showSettings"]));
+            }
+            set {
+                this["showSettings"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"The Phishing Outlook Add-In will provide an end-user{0}the ability to report Phishing eMails to the IT group,{0}sending the Phish email as an attachment to the Phish{0}Reporting eMail.The Phish eMail will be moved or{0}deleted depending on how the Add-In is configured.{0}{0}For additional help with the plugin, please contact your{0}IT support team.
+")]
+        public string aboutInfo {
+            get {
+                return ((string)(this["aboutInfo"]));
+            }
+            set {
+                this["aboutInfo"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://en.wikipedia.org/wiki/Phishing")]
+        public string phishingInformationURL {
+            get {
+                return ((string)(this["phishingInformationURL"]));
+            }
+            set {
+                this["phishingInformationURL"] = value;
+            }
+        }
     }
 }

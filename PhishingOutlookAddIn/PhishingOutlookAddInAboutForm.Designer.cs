@@ -39,7 +39,7 @@
          // 
          // pictureBox1
          // 
-         this.pictureBox1.Image = global::PhishingOutlookAddIn.Properties.Resources.phish_button;
+         this.pictureBox1.Image = global::PhishingOutlookAddIn.Properties.Resources.phishing_outlook_addin_128x128;
          this.pictureBox1.InitialImage = global::PhishingOutlookAddIn.Properties.Resources.phish_button;
          this.pictureBox1.Location = new System.Drawing.Point(12, 12);
          this.pictureBox1.Name = "pictureBox1";

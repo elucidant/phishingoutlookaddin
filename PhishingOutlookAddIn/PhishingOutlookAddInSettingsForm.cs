@@ -18,22 +18,15 @@ namespace PhishingOutlookAddIn
 
       // Default form properties based on Ribbon class' default settings
       // initially...
-      private static bool addinDebug = PhishingOutlookAddInRibbon.
-         DEFAULT_ADDIN_DEBUG_PROPERTY;
-      private static bool phishingEmailDeleteComplete = PhishingOutlookAddInRibbon.
-         DEFAULT_PHISHING_EMAIL_DELETE_COMPLETE_PROPERTY;
-      private static bool phishingEmailConfirmationPrompt = PhishingOutlookAddInRibbon.
-         DEFAULT_PHISHING_EMAIL_CONFIRMATION_PROMPT_PROPERTY;
+      private static bool addinDebug;
+      private static bool phishingEmailDeleteComplete;
+      private static bool phishingEmailConfirmationPrompt;
 
-      private static string phishingEmailAddress = PhishingOutlookAddInRibbon.
-         DEFAULT_PHISHING_EMAIL_ADDRESS_PROPERTY;
-      private static string phishingEmailSubject = PhishingOutlookAddInRibbon.
-         DEFAULT_PHISHING_EMAIL_SUBJECT_PROPERTY;
-      private static string phishingEmailFolder = PhishingOutlookAddInRibbon.
-         DEFAULT_PHISHING_EMAIL_FOLDER_PROPERTY;
+      private static string phishingEmailAddress;
+      private static string phishingEmailSubject;
+      private static string phishingEmailFolder;
 
-      private static int phishingEmailMaxReported = PhishingOutlookAddInRibbon.
-         DEFAULT_PHISHING_EMAIL_MAX_REPORTED_PROPERTY;
+      private static int phishingEmailMaxReported;
 
       // Read-write instance properties
       public string PhishingEmailAddress
@@ -51,6 +44,7 @@ namespace PhishingOutlookAddIn
          get { return phishingEmailFolder; }
          set { phishingEmailFolder = value; }
       }
+
       public bool AddInDebug
       {
          get { return addinDebug; }
@@ -72,90 +66,14 @@ namespace PhishingOutlookAddIn
          set { phishingEmailConfirmationPrompt = value; }
       }
 
-      /**
-       * 
-       * Static constructor to be called upon class initialization and before
-       * instance creation.  This constructor cannot be called directly.  The
-       * static constructor will initialize the form properties used.
-       *
-       */
-
-      static PhishingOutlookAddInSettingsForm()
-      {
-         // Upon initialization of the object, we need to determine if this is
-         // the first run of the application.  We need to check for the
-         // existence of the Initialized file in the User's local roaming
-         // folder for the AddIn.  If it does not exist, we need to load
-         // the properties from the Registry.
-
-         if (PhishingOutlookAddInRibbon.isAddInInitialized() == false)
-         {
-            log.Debug(
-               "Initialized flag does not EXIST.  Initializing application " +
-               "settings from the registry.  Creating initialized file...");
-
-            // We don't need to set the properties at this point since they
-            // are defaulted to the Registry Key values.  Just need to
-            // persist the Properties to the file system and then create the
-            // initialized file...
-            persistPropertySettings();
-
-            // Create the Initialized file as a flag for future runs that we
-            // don't initialize these values again.
-            PhishingOutlookAddInRibbon.createInitializedFile();
-         }
-      }
-
       public PhishingOutlookAddInSettingsForm()
       {
-         // Get local file system settings and set them if they are defined...
-         if (Properties.Settings.Default.phishingEmailAddress != null)
-         {
-            phishingEmailAddress = Properties.Settings.Default.phishingEmailAddress;
-         }
+         log.Debug("In PhishingOutlookAddInSettingsForm Constructor...");
 
-         if (Properties.Settings.Default.phishingEmailSubject != null)
-         {
-            phishingEmailSubject = Properties.Settings.Default.phishingEmailSubject;
-         }
+         // Get local file system settings...
+         updateUserSettings();
 
-         if (Properties.Settings.Default.phishingEmailFolder != null)
-         {
-            phishingEmailFolder = Properties.Settings.Default.phishingEmailFolder;
-         }
-
-         phishingEmailMaxReported = Properties.Settings.Default.phishingEmailMaxReported;
-
-         phishingEmailDeleteComplete =
-            Properties.Settings.Default.phishingEmailDeleteComplete;
-
-         addinDebug = Properties.Settings.Default.addinDebug;
-
-         phishingEmailConfirmationPrompt =
-            Properties.Settings.Default.phishingEmailConfirmationPrompt;
-
-         log.Debug(
-            "Application Properties:\n" +
-            "Show Settings: " +
-               PhishingOutlookAddInRibbon.SHOW_SETTINGS_PROPERTY + "\n" +
-            "Phishing Email Address: " +
-               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_ADDRESS_PROPERTY + "\n" +
-            "Phishing Email Subject: " +
-               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_SUBJECT_PROPERTY + "\n" +
-            "Phishing Email Folder: " +
-               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_FOLDER_PROPERTY + "\n" +
-            "Phishing Email Max Reported: " +
-               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_MAX_REPORTED_PROPERTY + "\n" +
-            "Phishing Email Delete Complete: " +
-               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_DELETE_COMPLETE_PROPERTY + "\n" +
-            "Phishing Email Confirmation Prompt: " +
-               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_CONFIRMATION_PROMPT_PROPERTY + "\n" +
-            "Organization Name: " +
-               PhishingOutlookAddInRibbon.DEFAULT_ORGANIZATION_NAME_PROPERTY + "\n" +
-            "Phishing URL: " +
-               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_INFORMATION_URL_PROPERTY + "\n" +
-            "AddIn Debug: " +
-               PhishingOutlookAddInRibbon.DEFAULT_ADDIN_DEBUG_PROPERTY);
+         logSettings();
 
          InitializeComponent();
       }
@@ -273,6 +191,9 @@ namespace PhishingOutlookAddIn
 
       private void button2_Click(object sender, EventArgs e)
       {
+         log.Debug(
+            "User pressed OK button!\n" + buildFormSettingsString());
+
          // We DO NOT need to set the phishingEmailFolder here since we are
          // setting the value in the Button Click event for the Outlook
          // folder selection process.
@@ -289,8 +210,7 @@ namespace PhishingOutlookAddIn
          // Now we need to persist the values to the Properties file...
          persistPropertySettings();
 
-         log.Debug(
-            "User pressed OK button!\n" + buildFormSettingsString());
+         logSettings();
 
          // Do a Hide() instead of a Close(), which kills the Form object...
          Hide();
@@ -308,15 +228,55 @@ namespace PhishingOutlookAddIn
       {
          // Now we need to persist the values to the Properties file...
          Properties.Settings.Default.phishingEmailFolder = phishingEmailFolder;
-         Properties.Settings.Default.phishingEmailAddress = phishingEmailAddress;
-         Properties.Settings.Default.phishingEmailSubject = phishingEmailSubject;
-         Properties.Settings.Default.phishingEmailMaxReported = phishingEmailMaxReported;
-         Properties.Settings.Default.phishingEmailDeleteComplete = phishingEmailDeleteComplete;
-         Properties.Settings.Default.phishingEmailConfirmationPrompt = phishingEmailConfirmationPrompt;
+         Properties.Settings.Default.phishingEmailAddress =
+            phishingEmailAddress;
+         Properties.Settings.Default.phishingEmailSubject =
+            phishingEmailSubject;
+         Properties.Settings.Default.phishingEmailMaxReported =
+            phishingEmailMaxReported;
+         Properties.Settings.Default.phishingEmailDeleteComplete =
+            phishingEmailDeleteComplete;
+         Properties.Settings.Default.phishingEmailConfirmationPrompt =
+            phishingEmailConfirmationPrompt;
          Properties.Settings.Default.addinDebug = addinDebug;
 
          // Persist changes to user settings between application sessions.
          Properties.Settings.Default.Save();
+
+         // Make sure to update the AddIn Default settings if you persist
+         // changes to the Property file.
+         PhishingOutlookAddInRibbon.setDefaultsToPropertyValues();
+      }
+
+      public static void updateUserSettings()
+      {
+         phishingEmailFolder =
+            Properties.Settings.Default.phishingEmailFolder;
+         phishingEmailAddress =
+            Properties.Settings.Default.phishingEmailAddress;
+         phishingEmailSubject =
+            Properties.Settings.Default.phishingEmailSubject;
+         phishingEmailMaxReported =
+            Properties.Settings.Default.phishingEmailMaxReported;
+         phishingEmailDeleteComplete =
+            Properties.Settings.Default.phishingEmailDeleteComplete;
+         phishingEmailConfirmationPrompt =
+            Properties.Settings.Default.phishingEmailConfirmationPrompt;
+         addinDebug = Properties.Settings.Default.addinDebug;
+      }
+
+      /**
+       * 
+       * Prior to showing the form, make sure that the properties are sync'd
+       * up.
+       * 
+       */
+
+      public void showForm()
+      {
+         this.setFormStateBasedOnProperties();
+
+         this.Show();
       }
 
       /**
@@ -331,7 +291,7 @@ namespace PhishingOutlookAddIn
             "User pressed CANCEL button!  " +
             "Reverting back to previous values!\n" +
             buildFormSettingsString());
-
+            
          setFormStateBasedOnProperties();
 
          // Do a Hide() instead of a Close(), which kills the Form object...
@@ -380,6 +340,8 @@ namespace PhishingOutlookAddIn
             "User pressed Reset to Defaults button!  " +
             "Reverting back to DEFAULT values!");
 
+         logSettings();
+
          // We want to set the form state to the default properties, BUT we DO
          // NOT want to set the properties UNTIL the user presses the OK
          // button.  This gives the user the ability to CANCEL out of the
@@ -407,7 +369,7 @@ namespace PhishingOutlookAddIn
 
          setFormStateBasedOnProperties();
       }
-       
+      
       /**
        * 
        * Sets the form state based on the current form properties.
@@ -494,6 +456,16 @@ namespace PhishingOutlookAddIn
             "Debug Enabled: " + addinDebug;
 
          return formSettingsString;
+      }
+
+      private void logSettings()
+      {
+         // Log the current AddIn Settings as well...
+         PhishingOutlookAddInRibbon.logSettings();
+
+         log.Debug(
+            "AddIn Settings Form Properties:\n" +
+            buildFormSettingsString());
       }
    }
 }

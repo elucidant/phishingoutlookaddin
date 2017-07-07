@@ -89,5 +89,15 @@ namespace PhishingOutlookAddIn.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap phishing_outlook_addin_128x128 {
+            get {
+                object obj = ResourceManager.GetObject("phishing_outlook_addin_128x128", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }
