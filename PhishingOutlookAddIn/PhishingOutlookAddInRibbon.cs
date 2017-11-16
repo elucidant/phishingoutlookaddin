@@ -82,7 +82,7 @@ namespace PhishingOutlookAddIn
       public const string ADD_IN_REGISTRY_CONFIRMATION_PROMPT_KEY =
          "PhishingEmailConfirmationPrompt";
 
-      public const string INITIALIZED_FILE_NAME = "initialized.txt";
+      public const string INITIALIZED_FILE_NAME = "user.ini";
 
       /**
        * 
@@ -154,6 +154,14 @@ namespace PhishingOutlookAddIn
          {
             log.Debug(
                "Initialized flag file DOES EXIST - initialization file creation skipped!");
+
+            log.Debug("Reading user property settings...");
+
+            Dictionary<string, string> userProperties = readInitializedFile();
+
+            log.Debug("Setting user property settings...");
+
+            setUserPropertySettings(userProperties);
          }
          else
          {
@@ -287,10 +295,10 @@ namespace PhishingOutlookAddIn
             string initializedFilePath =
                Path.Combine(addInLocalAppData, INITIALIZED_FILE_NAME);
 
-            string initFileContent =
-               "This file denotes that the PhishingOutlookAddIn has been " +
-               "initialized.  Please DO NOT delete this file unless you " +
-               "know what you are doing!";
+            log.Debug("Creating the Initialized User settings file: " +
+               initializedFilePath);
+
+            string initFileContent = buildUserSettingsFileContent();
 
             System.IO.StreamWriter file =
                new System.IO.StreamWriter(initializedFilePath);
@@ -304,6 +312,123 @@ namespace PhishingOutlookAddIn
             log.Error("Exception found during createInitializedFile(): " +
                ex.Message);
          }
+      }
+
+      /**
+       * 
+       * Deletes initialized file on the file system.
+       * 
+       */
+      public static void deleteInitializedFile()
+      {
+         string localAppData =
+            Environment.GetFolderPath(
+               System.Environment.SpecialFolder.ApplicationData);
+
+         string addInLocalAppData =
+            Path.Combine(localAppData, APPLICATION_NAME);
+
+         try
+         {
+            // Need to check if the directory exists...if not, no need to
+            // delete.
+            if (Directory.Exists(addInLocalAppData) == true)
+            {
+               string initializedFilePath =
+                  Path.Combine(addInLocalAppData, INITIALIZED_FILE_NAME);
+
+               log.Debug("Deleting the Initialized User settings file: " +
+                  initializedFilePath);
+
+               File.Delete(initializedFilePath);
+            }
+         }
+         catch (System.Exception ex)
+         {
+            log.Error("Exception found during deleteInitializedFile(): " +
+               ex.Message);
+         }
+      }
+      
+      /**
+       * 
+       * Updates initialized file on the file system. 
+       * 
+       */
+      public static void updateInitializedFile()
+      {
+         log.Debug("Updating the Initialized User settings file...");
+
+         // Will need to first delete the current initialized file...
+         deleteInitializedFile();
+
+         // Now recreate initialized file...
+         createInitializedFile();
+      }
+
+      /**
+       * 
+       * Reads User Initialization file.
+       * 
+       */
+
+      public static Dictionary<String, String> readInitializedFile()
+      {
+         Dictionary<String, String> userProperties = new Dictionary<String, String>();
+
+         string localAppData =
+            Environment.GetFolderPath(
+               System.Environment.SpecialFolder.ApplicationData);
+
+         string addInLocalAppData =
+            Path.Combine(localAppData, APPLICATION_NAME);
+
+         try
+         {
+            // Need to check if the directory exists...if not, no need to
+            // delete.
+            if (Directory.Exists(addInLocalAppData) == true)
+            {
+               string initializedFilePath =
+                  Path.Combine(addInLocalAppData, INITIALIZED_FILE_NAME);
+
+               using (StreamReader sr = new StreamReader(initializedFilePath))
+               {
+                  string line;
+
+                  while ((line = sr.ReadLine()) != null)
+                  {
+                     if (line != "")
+                     {
+                        // Trim out whitespace characters before and after...
+                        line.Trim();
+
+                        if ((line[0] != '#') || (line[0] != '['))
+                        {
+                           string[] parts = line.Split(new char[] { '=' });
+
+                           if (parts.Length == 2)
+                           {
+                              userProperties[parts[0]] = parts[1];
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         }
+         catch (System.Exception ex)
+         {
+            log.Error("Exception found during readInitializedFile(): " +
+               ex.Message);
+         }
+
+         foreach (KeyValuePair<string, string> kvp in userProperties)
+         {
+            log.Debug("Key = " + kvp.Key + "; Value = " + kvp.Value);
+         }
+
+         return userProperties;
       }
 
       /**
@@ -343,6 +468,81 @@ namespace PhishingOutlookAddIn
 
          // Persist changes to user settings between application sessions.
          Properties.Settings.Default.Save();
+      }
+
+      public static void setUserPropertySettings(Dictionary<string,string> userProperties)
+      {
+         // Now we need to persist the values to the Properties file...
+         Properties.Settings.Default.phishingEmailFolder =
+            userProperties["phishingEmailFolder"];
+         Properties.Settings.Default.phishingEmailAddress =
+            userProperties["phishingEmailAddress"];
+         Properties.Settings.Default.phishingEmailSubject =
+            userProperties["phishingEmailSubject"];
+         Properties.Settings.Default.organizationName =
+            userProperties["organizationName"];
+         Properties.Settings.Default.phishingInformationURL =
+            userProperties["phishingInformationURL"];
+         Properties.Settings.Default.aboutInfo =
+            userProperties["aboutInfo"];
+
+         // Process integer values...
+         int integerValue = 0;
+
+         if (int.TryParse(userProperties["phishingEmailMaxReported"], out integerValue))
+         {
+            Properties.Settings.Default.phishingEmailMaxReported = integerValue;
+         }
+         else
+         {
+            // If the configuration file does not provide a valid number, we
+            // will just use the default value from the Registry.
+            Properties.Settings.Default.phishingEmailMaxReported =
+               DEFAULT_PHISHING_EMAIL_MAX_REPORTED_PROPERTY;
+         }
+
+         // Process boolean values...
+         bool flag;
+
+         if (Boolean.TryParse(userProperties["addInDebug"], out flag))
+         {
+            Properties.Settings.Default.addinDebug = flag;
+         }
+         else
+         {
+            Properties.Settings.Default.addinDebug =
+               DEFAULT_ADDIN_DEBUG_PROPERTY;
+         }
+
+         if (Boolean.TryParse(userProperties["phishingEmailDeleteComplete"], out flag))
+         {
+            Properties.Settings.Default.phishingEmailDeleteComplete = flag;
+         }
+         else
+         {
+            Properties.Settings.Default.phishingEmailDeleteComplete =
+               DEFAULT_PHISHING_EMAIL_DELETE_COMPLETE_PROPERTY;
+         }
+
+         if (Boolean.TryParse(userProperties["phishingEmailConfirmationPrompt"], out flag))
+         {
+            Properties.Settings.Default.phishingEmailConfirmationPrompt = flag;
+         }
+         else
+         {
+            Properties.Settings.Default.phishingEmailConfirmationPrompt =
+               DEFAULT_PHISHING_EMAIL_CONFIRMATION_PROMPT_PROPERTY;
+         }
+
+         if (Boolean.TryParse(userProperties["showSettings"], out flag))
+         {
+            Properties.Settings.Default.showSettings = flag;
+         }
+         else
+         {
+            Properties.Settings.Default.showSettings =
+               SHOW_SETTINGS_PROPERTY;
+         }
       }
 
       /**
@@ -393,6 +593,39 @@ namespace PhishingOutlookAddIn
          log.Debug(
             "AddIn User Configuration Properties:\n" +
             buildUserConfigSettingsString());
+      }
+
+      public static string buildUserSettingsFileContent()
+      {
+         string userSettingsFileString =
+            "###\n" +
+            "### This is the Phishing AddIn User Configuration file!\n" +
+            "###\n\n" +
+            "[User Settings]\n" +
+            "phishingEmailFolder=" +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_FOLDER_PROPERTY + "\n" +
+            "phishingEmailAddress=" +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_ADDRESS_PROPERTY + "\n" +
+            "phishingEmailSubject=" +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_SUBJECT_PROPERTY + "\n" +
+            "organizationName=" +
+               PhishingOutlookAddInRibbon.DEFAULT_ORGANIZATION_NAME_PROPERTY + "\n" +
+            "phishingEmailMaxReported=" +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_MAX_REPORTED_PROPERTY + "\n" +
+            "phishingEmailDeleteComplete=" +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_DELETE_COMPLETE_PROPERTY + "\n" +
+            "phishingInformationURL=" +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_INFORMATION_URL_PROPERTY + "\n" +
+            "phishingEmailConfirmationPrompt=" +
+               PhishingOutlookAddInRibbon.DEFAULT_PHISHING_EMAIL_CONFIRMATION_PROMPT_PROPERTY + "\n" +
+            "aboutInfo=" +
+               Properties.Settings.Default.aboutInfo + "\n" +
+            "addInDebug=" +
+               PhishingOutlookAddInRibbon.DEFAULT_ADDIN_DEBUG_PROPERTY + "\n" +
+            "showSettings=" +
+               PhishingOutlookAddInRibbon.SHOW_SETTINGS_PROPERTY;
+
+         return userSettingsFileString;
       }
 
       public static string buildAddInSettingsString()

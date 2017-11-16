@@ -244,8 +244,17 @@ namespace PhishingOutlookAddIn
          Properties.Settings.Default.Save();
 
          // Make sure to update the AddIn Default settings if you persist
-         // changes to the Property file.
+         // changes to the Property file.  This has to done PRIOR to updating
+         // the Initialized User Settings file (below)
          PhishingOutlookAddInRibbon.setDefaultsToPropertyValues();
+         
+         // Make sure to save these updated values to the user property file.  Need
+         // to do this since User settings file(s) DO NOT work for VSTO AddIns due
+         // to the nature that the User Settings file is created within a path
+         // containing the Application version.  This version numbers get modified
+         // when a application patch is installed, and so the AddIn cannot find
+         // the original file.  Stupid...just stupid.
+         PhishingOutlookAddInRibbon.updateInitializedFile();
       }
 
       public static void updateUserSettings()
